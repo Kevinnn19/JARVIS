@@ -1,0 +1,411 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jarvis.local/schemas/command-schema.json",
+  "title": "JARVIS command protocol (v1)",
+  "description": "Shared contract between the Android app, the FastAPI server and the Windows desktop agent. A command is a typed request, never code.",
+  "$defs": {
+    "CommandRequest": {
+      "$defs": {
+        "CommandSource": {
+          "description": "Where a command came from. Drives the trust level in the policy engine.",
+          "enum": [
+            "local_typed",
+            "local_voice",
+            "remote_api",
+            "remote_voice"
+          ],
+          "title": "CommandSource",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "description": "A validated intent. Produced by the parser, consumed by the executor.",
+      "properties": {
+        "command_id": {
+          "title": "Command Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "args": {
+          "additionalProperties": true,
+          "title": "Args",
+          "type": "object"
+        },
+        "raw_text": {
+          "default": "",
+          "title": "Raw Text",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/CommandSource",
+          "default": "local_typed"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "CommandRequest",
+      "type": "object"
+    },
+    "CommandResult": {
+      "$defs": {
+        "ExecutionStatus": {
+          "description": "Outcome of a command. ``dry_run`` is deliberately distinct from\n``success`` so that nothing can claim work that was not actually done.",
+          "enum": [
+            "success",
+            "dry_run",
+            "failure",
+            "rejected",
+            "pending_confirmation",
+            "timeout",
+            "parse_error"
+          ],
+          "title": "ExecutionStatus",
+          "type": "string"
+        },
+        "PermissionLevel": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "blocked"
+          ],
+          "title": "PermissionLevel",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "description": "What actually happened. Always produced by the executor, never by the\nparser, so the reported status reflects the real world.",
+      "properties": {
+        "command_id": {
+          "title": "Command Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/ExecutionStatus"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "permission": {
+          "$ref": "#/$defs/PermissionLevel",
+          "default": "low"
+        },
+        "details": {
+          "additionalProperties": true,
+          "title": "Details",
+          "type": "object"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "finished_at": {
+          "format": "date-time",
+          "title": "Finished At",
+          "type": "string"
+        },
+        "duration_ms": {
+          "default": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "command_id",
+        "name",
+        "status",
+        "message"
+      ],
+      "title": "CommandResult",
+      "type": "object"
+    },
+    "ParseResult": {
+      "$defs": {
+        "CommandRequest": {
+          "additionalProperties": false,
+          "description": "A validated intent. Produced by the parser, consumed by the executor.",
+          "properties": {
+            "command_id": {
+              "title": "Command Id",
+              "type": "string"
+            },
+            "name": {
+              "maxLength": 64,
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            },
+            "args": {
+              "additionalProperties": true,
+              "title": "Args",
+              "type": "object"
+            },
+            "raw_text": {
+              "default": "",
+              "title": "Raw Text",
+              "type": "string"
+            },
+            "source": {
+              "$ref": "#/$defs/CommandSource",
+              "default": "local_typed"
+            },
+            "created_at": {
+              "format": "date-time",
+              "title": "Created At",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "title": "CommandRequest",
+          "type": "object"
+        },
+        "CommandSource": {
+          "description": "Where a command came from. Drives the trust level in the policy engine.",
+          "enum": [
+            "local_typed",
+            "local_voice",
+            "remote_api",
+            "remote_voice"
+          ],
+          "title": "CommandSource",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Parser output. Either a request or a human-readable reason + suggestions.",
+      "properties": {
+        "ok": {
+          "title": "Ok",
+          "type": "boolean"
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommandRequest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "suggestions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Suggestions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "ok"
+      ],
+      "title": "ParseResult",
+      "type": "object"
+    },
+    "CommandSource": {
+      "type": "string",
+      "enum": [
+        "local_typed",
+        "local_voice",
+        "remote_api",
+        "remote_voice"
+      ]
+    },
+    "ExecutionStatus": {
+      "type": "string",
+      "enum": [
+        "success",
+        "dry_run",
+        "failure",
+        "rejected",
+        "pending_confirmation",
+        "timeout",
+        "parse_error"
+      ]
+    },
+    "PermissionLevel": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "blocked"
+      ]
+    },
+    "commands": {
+      "description": "name -> argument schema. args are validated before any handler runs.",
+      "type": "object",
+      "properties": {
+        "open_application": {
+          "additionalProperties": false,
+          "properties": {
+            "application": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Application",
+              "type": "string"
+            },
+            "arguments": {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 8,
+              "title": "Arguments",
+              "type": "array"
+            }
+          },
+          "required": [
+            "application"
+          ],
+          "title": "OpenApplicationArgs",
+          "type": "object"
+        },
+        "close_application": {
+          "additionalProperties": false,
+          "properties": {
+            "application": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Application",
+              "type": "string"
+            }
+          },
+          "required": [
+            "application"
+          ],
+          "title": "CloseApplicationArgs",
+          "type": "object"
+        },
+        "open_folder": {
+          "additionalProperties": false,
+          "properties": {
+            "folder": {
+              "maxLength": 80,
+              "minLength": 1,
+              "title": "Folder",
+              "type": "string"
+            }
+          },
+          "required": [
+            "folder"
+          ],
+          "title": "OpenFolderArgs",
+          "type": "object"
+        },
+        "search_files": {
+          "additionalProperties": false,
+          "properties": {
+            "query": {
+              "maxLength": 120,
+              "minLength": 1,
+              "title": "Query",
+              "type": "string"
+            },
+            "root": {
+              "anyOf": [
+                {
+                  "maxLength": 260,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Root"
+            },
+            "limit": {
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "title": "SearchFilesArgs",
+          "type": "object"
+        },
+        "set_volume": {
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "maximum": 100,
+              "minimum": 0,
+              "title": "Level",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "level"
+          ],
+          "title": "SetVolumeArgs",
+          "type": "object"
+        },
+        "screenshot": {
+          "additionalProperties": false,
+          "description": "Commands that take no parameters (status, help, stop, screenshot).",
+          "properties": {},
+          "title": "NoArgs",
+          "type": "object"
+        },
+        "status": {
+          "additionalProperties": false,
+          "description": "Commands that take no parameters (status, help, stop, screenshot).",
+          "properties": {},
+          "title": "NoArgs",
+          "type": "object"
+        },
+        "help": {
+          "additionalProperties": false,
+          "description": "Commands that take no parameters (status, help, stop, screenshot).",
+          "properties": {},
+          "title": "NoArgs",
+          "type": "object"
+        },
+        "stop": {
+          "additionalProperties": false,
+          "description": "Commands that take no parameters (status, help, stop, screenshot).",
+          "properties": {},
+          "title": "NoArgs",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

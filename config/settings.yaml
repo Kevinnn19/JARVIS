@@ -1,0 +1,60 @@
+# =============================================================================
+# JARVIS — Runtime settings
+# =============================================================================
+# Secrets (passwords, tokens, Tailscale keys) NEVER live in this file or in the
+# repo. They belong in Windows Credential Manager / a .env file excluded by
+# .gitignore (Phase 3).
+# =============================================================================
+
+version: 1
+
+agent:
+  name: JARVIS
+  # Hard ceiling for a single command handler. A hung automation call must never
+  # stall the assistant forever.
+  command_timeout_seconds: 20
+  confirm_timeout_seconds: 30
+
+paths:
+  # Anchor for friendly folder names (downloads/documents/...). Defaults to the
+  # logged-in Windows profile; overridable so the agent is testable.
+  home: "~"
+  # File operations are confined to these roots. Anything outside is rejected.
+  # ~ is expanded; a missing folder is simply skipped at runtime.
+  allowed_roots:
+    - "~"
+    - "~/Downloads"
+    - "~/Documents"
+    - "~/Desktop"
+    - "~/Pictures"
+  # Explicitly never-touch locations (belt and braces: also blocked by the
+  # allowed-roots rule, but reported with a clearer message).
+  protected_paths:
+    - "C:\\Windows"
+    - "C:\\Program Files"
+    - "C:\\Program Files (x86)"
+    - "C:\\ProgramData"
+    - "C:\\$Recycle.Bin"
+    - "C:\\System Volume Information"
+    - "/etc"
+    - "/usr"
+    - "/bin"
+    - "/boot"
+    - "/System"
+  # Default search scope when the user does not name a folder.
+  default_search_roots: ["~/Downloads", "~/Documents", "~/Desktop"]
+  search_max_depth: 6
+  search_max_results: 25
+
+logging:
+  # ~/.jarvis/logs/audit.jsonl  — append-only JSON Lines, one line per command.
+  log_dir: "~/.jarvis/logs"
+  audit_file: audit.jsonl
+  level: INFO
+
+voice:
+  # Phase 2 fills these in; kept here so config shape is stable.
+  enabled: false
+  speech_to_text: faster-whisper
+  text_to_speech: pyttsx3
+  wake_word: openWakeWord

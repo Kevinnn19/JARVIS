@@ -1,0 +1,60 @@
+# =============================================================================
+# JARVIS — Command registry configuration (WHAT Jarvis may do)
+# =============================================================================
+# This file together with ../desktop-agent/core/task_registry.py defines the
+# complete surface area of the assistant. Natural language is matched against
+# `patterns` below and converted into a structured CommandRequest — it is never
+# evaluated as code.
+#
+# `command_order` matters: the first command whose pattern matches wins.
+# Open-folder rules are listed before open-application so that "open downloads"
+# opens the folder instead of being rejected as an unknown application.
+#
+# Pattern syntax: Python regex. Named groups (?P<name>...) become command
+# arguments. A rule may be either a bare pattern string, or a mapping with
+# `pattern` plus `args` for fixed arguments (e.g. mute == level 0).
+# =============================================================================
+
+version: 1
+
+command_order:
+  - stop
+  - help
+  - status
+  - screenshot
+  - set_volume
+  - open_folder
+  - search_files
+  - open_application
+  - close_application
+
+patterns:
+
+  stop:
+    - '^(?:jarvis[,\s]+)?(?:stop(?:\s+listening)?|cancel|never\s?mind|abort|shut\s+up)$'
+
+  help:
+    - '^(?:jarvis[,\s]+)?(?:help|commands|list\s+commands|what\s+can\s+you\s+do)$'
+
+  status:
+    - '^(?:jarvis[,\s]+)?(?:status|system\s+status|are\s+you\s+(?:there|online|alive)|you\s+there)$'
+
+  screenshot:
+    - '^(?:jarvis[,\s]+)?(?:take\s+)?(?:a\s+)?(?:screen\s?shot|screen\s?grab|capture\s+the\s+screen)$'
+
+  set_volume:
+    - '^(?:jarvis[,\s]+)?(?:set\s+)?(?:the\s+)?volume\s+(?:to\s+)?(?P<level>\d{1,3})\s*%?$'
+    - pattern: '^(?:jarvis[,\s]+)?(?:mute|silence)(?:\s+the)?(?:\s+(?:volume|sound|audio))?$'
+      args: { level: 0 }
+
+  open_folder:
+    - '^(?:jarvis[,\s]+)?(?:open|show|go\s+to|take\s+me\s+to)\s+(?:the\s+|my\s+)?(?P<folder>downloads|documents|pictures|desktop|home|music|videos)(?:\s+folder)?$'
+
+  search_files:
+    - '^(?:jarvis[,\s]+)?(?:search|find|look)\s+(?:for\s+)?(?:files?\s+)?(?:named\s+|called\s+)?(?P<query>.+?)(?:\s+in\s+(?P<root>.+))?$'
+
+  open_application:
+    - '^(?:jarvis[,\s]+)?(?:can\s+you\s+|please\s+)?(?:open|launch|start|run)\s+(?:the\s+|my\s+)?(?P<application>.+)$'
+
+  close_application:
+    - '^(?:jarvis[,\s]+)?(?:can\s+you\s+|please\s+)?(?:close|quit|exit|kill)\s+(?:the\s+|my\s+)?(?P<application>.+)$'

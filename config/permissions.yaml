@@ -1,0 +1,60 @@
+# =============================================================================
+# JARVIS — Permissions (HOW MUCH authority a command has)
+# =============================================================================
+# Layer 3 of the security model. Levels:
+#
+#   low      Read-only-ish or trivially reversible. Executes immediately.
+#   medium   Changes user data (rename/move). Confirmation unless the request
+#            comes from a trusted local source AND `confirm_medium_locally`
+#            is false.
+#   high     Destructive or disruptive (delete, shutdown, restart). ALWAYS
+#            confirmed. Never auto-approved for remote sources.
+#   blocked  Registered only so JARVIS can refuse it explicitly with a reason
+#            (e.g. "run this shell command"). Never executed, no override.
+#
+# Phase 1 registers only `low` commands; medium/high entries are pre-declared
+# here so the policy is reviewable and Phase 3 has nothing to invent.
+# =============================================================================
+
+version: 1
+
+policy:
+  # Sources that count as "the authenticated owner sitting at the laptop".
+  trusted_local_sources: [local_typed, local_voice]
+
+  # A remote request may never exceed this level, regardless of confirmation.
+  max_remote_permission: high
+
+  # Remote high-risk commands need confirmation on a second factor (phone/laptop
+  # prompt) — implemented in Phase 3, enforced as "pending" until then.
+  confirm_medium_locally: false
+  confirm_high_always: true
+
+  # If the agent has been emergency-stopped, everything except `stop`/`status`
+  # is rejected until it is resumed.
+  allow_only_when_locked: [stop, status]
+
+commands:
+  # ---- Phase 1 (implemented) ----
+  open_application:   { permission: low }
+  close_application:  { permission: low }
+  open_folder:        { permission: low }
+  search_files:       { permission: low }
+  set_volume:         { permission: low }
+  screenshot:         { permission: low }
+  status:             { permission: low }
+  help:               { permission: low }
+  stop:               { permission: low }
+
+  # ---- Phase 3 (pre-declared, not yet implemented) ----
+  rename_file:        { permission: medium, confirmation: true }
+  move_file:          { permission: medium, confirmation: true }
+  delete_file:        { permission: high, confirmation: true }
+  empty_recycle_bin:  { permission: high, confirmation: true }
+  shutdown_system:    { permission: high, confirmation: true }
+  restart_system:     { permission: high, confirmation: true }
+  lock_workstation:   { permission: medium }
+
+  # ---- Permanently blocked ----
+  execute_shell_command: { permission: blocked, reason: "Arbitrary shell execution is disabled by design." }
+  modify_security_settings: { permission: blocked, reason: "Security configuration can only be changed manually." }

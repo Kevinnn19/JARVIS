@@ -1,0 +1,114 @@
+# =============================================================================
+# JARVIS — Application allowlist
+# =============================================================================
+# This file is the ONLY place where "which applications JARVIS may touch" is
+# defined. The command parser can never invent an application: if an app is not
+# listed here, the request is rejected before any handler runs.
+#
+# Fields per application:
+#   display_name   Human-readable name used in spoken/text responses.
+#   aliases        Words the user may say/type. Must be lowercase.
+#   process_names  Process image names used to VERIFY the app is running.
+#                  Verification is what lets JARVIS report the real outcome
+#                  instead of "I sent the request".
+#   windows        {launch: [candidate paths/commands], uri: <optional>}
+#   linux          {launch: [candidate binaries], uri: <optional>}
+#   darwin         {launch: [candidate commands], uri: <optional>}
+#
+# `launch` candidates are tried in order; ${ENV_VARS} are expanded, and each
+# candidate is also looked up on PATH. `uri` is the last-resort OS handler
+# (e.g. "ms-settings:" / a URL) used only if no candidate resolves.
+# =============================================================================
+
+version: 1
+
+applications:
+
+  chrome:
+    display_name: Google Chrome
+    aliases: [chrome, google chrome, google-chrome, browser]
+    process_names:
+      windows: [chrome.exe]
+      linux: [chrome, google-chrome, chromium]
+      darwin: [Google Chrome]
+    windows:
+      launch:
+        - "${ProgramFiles}\\Google\\Chrome\\Application\\chrome.exe"
+        - "${ProgramFiles(x86)}\\Google\\Chrome\\Application\\chrome.exe"
+        - "${LocalAppData}\\Google\\Chrome\\Application\\chrome.exe"
+    linux:
+      launch: [google-chrome, google-chrome-stable, chromium, chromium-browser]
+    darwin:
+      launch: ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"]
+
+  notepad:
+    display_name: Notepad
+    aliases: [notepad, note pad, text editor, editor]
+    process_names:
+      windows: [notepad.exe]
+      linux: [gedit, kate, mousepad]
+      darwin: [TextEdit]
+    windows:
+      launch:
+        - "notepad.exe"
+        - "${SystemRoot}\\System32\\notepad.exe"
+    linux:
+      launch: [gedit, kate, mousepad]
+    darwin:
+      launch: [open -a TextEdit]   # informational only; macOS is not a v1 target
+
+  calculator:
+    display_name: Calculator
+    aliases: [calculator, calc]
+    process_names:
+      windows: [CalculatorApp.exe, Calculator.exe, calc.exe]
+      linux: [gnome-calculator, kcalc]
+      darwin: [Calculator]
+    windows:
+      launch:
+        - "calc.exe"
+        - "explorer.exe shell:AppsFolder\\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"
+    linux:
+      launch: [gnome-calculator, kcalc]
+
+  file_explorer:
+    display_name: File Explorer
+    aliases: [file explorer, explorer, files, file manager]
+    process_names:
+      windows: [explorer.exe]
+      linux: [nautilus, dolphin, thunar]
+      darwin: [Finder]
+    windows:
+      launch:
+        - "explorer.exe"
+    linux:
+      launch: [nautilus, dolphin, thunar]
+
+  vs_code:
+    display_name: Visual Studio Code
+    aliases: [vs code, vscode, code, visual studio code]
+    process_names:
+      windows: [Code.exe]
+      linux: [code]
+      darwin: [Code]
+    windows:
+      launch:
+        - "${LocalAppData}\\Programs\\Microsoft VS Code\\Code.exe"
+        - "${ProgramFiles}\\Microsoft VS Code\\Code.exe"
+        - "code.cmd"
+    linux:
+      launch: [code]
+
+  spotify:
+    display_name: Spotify
+    aliases: [spotify, music]
+    process_names:
+      windows: [Spotify.exe]
+      linux: [spotify]
+      darwin: [Spotify]
+    windows:
+      launch:
+        - "${AppData}\\Spotify\\Spotify.exe"
+        - "${LocalAppData}\\Microsoft\\WindowsApps\\SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify.exe"
+    linux:
+      launch: [spotify]
